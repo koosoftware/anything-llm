@@ -99,6 +99,21 @@ class GroqLLM {
     userPrompt = "",
     attachments = [], // This is the specific attachment for only this prompt
   }) {
+    // Remove attachments from chatHistory, due to property 'attachments' is unsupported
+    chatHistory = chatHistory.map(msg => {
+      if (Array.isArray(msg.content)) {
+        const textContent = msg.content
+          .filter(part => part.type === "text")
+          .map(part => part.text)
+          .join("\n");
+
+        return { ...msg, content: textContent };
+      }
+
+      // If content is a string, keep it as-is
+      return msg;
+    }).filter(msg => msg.content && msg.content.trim() !== "");
+
     const VISION_MODELS = [
       "llama-3.2-90b-vision-preview",
       "llama-3.2-11b-vision-preview",
