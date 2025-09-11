@@ -101,8 +101,8 @@ class GroqLLM {
   }) {
     // Remove attachments from chatHistory, due to property 'attachments' is unsupported
     chatHistory.forEach((msg) => {
-      if (Array.isArray(msg) && msg[0] && msg[0].attachments) {
-        delete msg[0].attachments;
+      if (msg.attachments) {
+        delete msg.attachments;
       }
     });
 
