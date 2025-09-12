@@ -997,6 +997,41 @@ function apiWorkspaceEndpoints(app) {
       }
     }
   );
+
+  app.delete(
+    "/v1/workspace/:slug/delete-chats",
+    [validApiKey],
+    async (request, response) => {
+      try {
+        const { slug = "" } = request.params;
+        const { chatIds = [] } = reqBody(request);
+        const workspace = await Workspace.get({ slug });
+
+        if (!workspace || !Array.isArray(chatIds)) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        // This works for both workspace and threads.
+        // we simplify this by just looking at workspace<>user overlap
+        // since they are all on the same table.
+        await WorkspaceChats.delete({
+          id: { in: chatIds.map((id) => Number(id)) },
+          //user_id: user?.id ?? null,
+          workspaceId: workspace.id,
+        });
+
+        await EventLogs.logEvent("api_workspace_chat_deleted", {
+          workspaceName: workspace?.name || "Unknown Workspace",
+        });
+
+        response.sendStatus(200).end();
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
 }
 
 module.exports = { apiWorkspaceEndpoints };
