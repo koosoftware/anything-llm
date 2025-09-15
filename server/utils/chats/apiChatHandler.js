@@ -434,7 +434,7 @@ async function streamChat({
     return eventListener
       .streamAgentEvents(response, uuid)
       .then(async ({ thoughts, textResponse }) => {
-        await WorkspaceChats.new({
+        const { chat } = await WorkspaceChats.new({
           workspaceId: workspace.id,
           prompt: String(message),
           response: {
@@ -455,6 +455,7 @@ async function streamChat({
           thoughts,
           close: true,
           error: false,
+          chatId: chat.id,
         });
       });
   }
