@@ -550,8 +550,9 @@ async function streamChat({
     // Inject any parsed files for this workspace/thread/user
     const parsedFiles = await WorkspaceParsedFiles.getContextFiles(
       workspace,
-      sessionId,
-      user || null
+      thread || null,
+      user || null,
+      sessionId
     );
     parsedFiles.forEach((doc) => {
       const { pageContent, ...metadata } = doc;
