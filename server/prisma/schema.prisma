@@ -383,6 +383,7 @@ model workspace_parsed_files {
   workspace          workspaces         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user               users?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   thread             workspace_threads? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sessionId          String?
 
   @@index([workspaceId])
   @@index([userId])
