@@ -602,7 +602,6 @@ function apiWorkspaceThreadEndpoints(app) {
           thread,
           attachments,
           reset,
-          threadId: null,
         });
         await Telemetry.sendTelemetry("sent_chat", {
           LLMSelection: process.env.LLM_PROVIDER || "openai",

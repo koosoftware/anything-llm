@@ -374,7 +374,6 @@ async function streamChat({
   sessionId = null,
   attachments = [],
   reset = false,
-  threadId = null,
 }) {
   const uuid = uuidv4();
   const chatMode = mode ?? "chat";
@@ -547,11 +546,11 @@ async function streamChat({
       });
     });
 
-  if (threadId) {
+  if (sessionId && sessionId.length > 0) {
     // Inject any parsed files for this workspace/thread/user
     const parsedFiles = await WorkspaceParsedFiles.getContextFiles(
       workspace,
-      { id: threadId },
+      sessionId,
       user || null
     );
     parsedFiles.forEach((doc) => {

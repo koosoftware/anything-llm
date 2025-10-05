@@ -844,7 +844,6 @@ function apiWorkspaceEndpoints(app) {
           sessionId: !!sessionId ? String(sessionId) : null,
           attachments,
           reset,
-          threadId: threadId,
         });
         await Telemetry.sendTelemetry("sent_chat", {
           LLMSelection:
@@ -1046,10 +1045,10 @@ function apiWorkspaceEndpoints(app) {
 
         const { originalname } = request.file;
         const { slug = "" } = request.params;
-        const { threadId } = reqBody(request);
+        const { sessionId } = reqBody(request);
         const workspace = await Workspace.get({ slug });
 
-        if (!workspace || threadId == undefined || threadId == null) {
+        if (!workspace || sessionId == undefined || sessionId == null || sessionId.length == 0) {
           response.sendStatus(400).end();
           return;
         }
@@ -1087,9 +1086,10 @@ function apiWorkspaceEndpoints(app) {
               filename,
               workspaceId: workspace.id,
               userId: null,
-              threadId: threadId,
+              threadId: null,
               metadata: JSON.stringify(metadata),
               tokenCountEstimate: doc.token_count_estimate || 0,
+              sessionId: sessionId,
             });
 
             if (dbError) throw new Error(dbError);
@@ -1103,7 +1103,6 @@ function apiWorkspaceEndpoints(app) {
           {
             documentName: originalname,
             workspace: workspace.slug,
-            thread: threadId,
           }
         );
 
