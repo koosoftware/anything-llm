@@ -176,6 +176,7 @@ async function handleMobileCommand(request, response) {
       sessionId: null,
       attachments: [],
       reset: false,
+      threadId: null,
     });
     return response.end();
   }

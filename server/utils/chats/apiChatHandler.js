@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const { DocumentManager } = require("../DocumentManager");
 const { WorkspaceChats } = require("../../models/workspaceChats");
+const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
 const { getVectorDbClass, getLLMProvider } = require("../helpers");
 const { writeResponseChunk } = require("../helpers/chat/responses");
 const {
@@ -373,6 +374,7 @@ async function streamChat({
   sessionId = null,
   attachments = [],
   reset = false,
+  threadId = null,
 }) {
   const uuid = uuidv4();
   const chatMode = mode ?? "chat";
@@ -544,6 +546,24 @@ async function streamChat({
         });
       });
     });
+
+  if (threadId) {
+    // Inject any parsed files for this workspace/thread/user
+    const parsedFiles = await WorkspaceParsedFiles.getContextFiles(
+      workspace,
+      { id: threadId },
+      user || null
+    );
+    parsedFiles.forEach((doc) => {
+      const { pageContent, ...metadata } = doc;
+      contextTexts.push(doc.pageContent);
+      sources.push({
+        text:
+          pageContent.slice(0, 1_000) + "...continued on in source document...",
+        ...metadata,
+      });
+    });
+  }
 
   const vectorSearchResults =
     embeddingsCount !== 0

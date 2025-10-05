@@ -15,6 +15,9 @@ const {
 } = require("../../../utils/helpers/chat/responses");
 const { ApiChatHandler } = require("../../../utils/chats/apiChatHandler");
 const { getModelTag } = require("../../utils");
+const { handleAPIFileUpload } = require("../../../utils/files/multer");
+const { CollectorApi } = require("../../../utils/collectorApi");
+const { WorkspaceParsedFiles } = require("../../../models/workspaceParsedFiles");
 
 function apiWorkspaceEndpoints(app) {
   if (!app) return;
@@ -795,6 +798,7 @@ function apiWorkspaceEndpoints(app) {
           sessionId = null,
           attachments = [],
           reset = false,
+          threadId = null,
         } = reqBody(request);
         const workspace = await Workspace.get({ slug: String(slug) });
 
@@ -840,6 +844,7 @@ function apiWorkspaceEndpoints(app) {
           sessionId: !!sessionId ? String(sessionId) : null,
           attachments,
           reset,
+          threadId: threadId,
         });
         await Telemetry.sendTelemetry("sent_chat", {
           LLMSelection:
@@ -1026,6 +1031,88 @@ function apiWorkspaceEndpoints(app) {
         });
 
         response.sendStatus(200).end();
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.post(
+    "/v1/workspace/:slug/parse-file",
+    [validApiKey, handleAPIFileUpload],
+    async (request, response) => {
+      try {
+
+        const { originalname } = request.file;
+        const { slug = "" } = request.params;
+        const { threadId } = reqBody(request);
+        const workspace = await Workspace.get({ slug });
+
+        if (!workspace || threadId == undefined || threadId == null) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        const Collector = new CollectorApi();
+        const processingOnline = await Collector.online();
+
+        if (!processingOnline) {
+          response
+            .status(500)
+            .json({
+              success: false,
+              error: `Document processing API is not online. Document ${originalname} will not be parsed.`,
+            })
+            .end();
+          return;
+        }
+
+        const { success, reason, documents } =
+          await Collector.parseDocument(originalname);
+        if (!success || !documents?.[0]) {
+          return response.status(500).json({
+            success: false,
+            error: reason || "No document returned from collector",
+          });
+        }
+
+        const files = await Promise.all(
+          documents.map(async (doc) => {
+            const metadata = { ...doc };
+            // Strip out pageContent
+            delete metadata.pageContent;
+            const filename = `${originalname}-${doc.id}.json`;
+            const { file, error: dbError } = await WorkspaceParsedFiles.create({
+              filename,
+              workspaceId: workspace.id,
+              userId: null,
+              threadId: threadId,
+              metadata: JSON.stringify(metadata),
+              tokenCountEstimate: doc.token_count_estimate || 0,
+            });
+
+            if (dbError) throw new Error(dbError);
+            return file;
+          })
+        );
+
+        Collector.log(`Document ${originalname} parsed successfully.`);
+        await EventLogs.logEvent(
+          "document_uploaded_to_chat",
+          {
+            documentName: originalname,
+            workspace: workspace.slug,
+            thread: threadId,
+          }
+        );
+
+        response.status(200).json({
+          success: true,
+          error: null,
+          files,
+        });
+
       } catch (e) {
         console.error(e.message, e);
         response.sendStatus(500).end();
