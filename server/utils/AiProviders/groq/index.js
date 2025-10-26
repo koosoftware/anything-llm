@@ -100,10 +100,32 @@ class GroqLLM {
     attachments = [], // This is the specific attachment for only this prompt
   }) {
     // Remove attachments from chatHistory, due to property 'attachments' is unsupported
-    chatHistory.forEach((msg) => {
+    /*chatHistory.forEach((msg) => {
       if (msg.attachments) {
         delete msg.attachments;
       }
+    });*/
+
+    const finalChatHistory = chatHistory.map((msg) => {
+      const chatHistoryContentList = [
+        {
+          type: "text",
+          text: msg.content,
+        }
+      ];
+      if (Array.isArray(msg.attachments) && msg.attachments[0]?.contentString) {
+        chatHistoryContentList.push({
+          type: "image_url",
+          image_url: {
+            url: msg.attachments[0].contentString
+          }
+        });
+      }
+
+      return {
+        role: msg.role,
+        content: chatHistoryContentList
+      };
     });
 
     const VISION_MODELS = [
@@ -115,7 +137,7 @@ class GroqLLM {
         role: "system",
         content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
       },
-      ...chatHistory,
+      ...finalChatHistory,
       { role: "user", content: userPrompt },
     ];
 
