@@ -145,10 +145,31 @@ class GroqLLM {
     // as there is nothing to attach or do and no model limitations to consider
     if (!attachments.length) return DEFAULT_PROMPT_STRUCT;
     if (!VISION_MODELS.includes(this.model)) {
-      this.#log(
+      /*this.#log(
         `${this.model} is not an explicitly supported vision model! Will omit attachments.`
-      );
-      return DEFAULT_PROMPT_STRUCT;
+      );*/
+      return [
+        {
+          role: "system",
+          content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
+        },
+        ...finalChatHistory,
+        { 
+          role: "user", 
+          content: [
+            {
+              type: "text",
+              text: userPrompt,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: attachments[0].contentString,
+              }
+            }
+          ] 
+        },
+      ];
     }
 
     return [
