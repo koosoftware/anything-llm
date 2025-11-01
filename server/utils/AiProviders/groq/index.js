@@ -6,14 +6,13 @@ const {
   handleDefaultStreamResponseV2,
 } = require("../../helpers/chat/responses");
 const { MODEL_MAP } = require("../modelMap");
+import Groq from "groq-sdk";
 
 class GroqLLM {
   constructor(embedder = null, modelPreference = null) {
-    const { OpenAI: OpenAIApi } = require("openai");
     if (!process.env.GROQ_API_KEY) throw new Error("No Groq API key was set.");
 
-    this.openai = new OpenAIApi({
-      baseURL: "https://api.groq.com/openai/v1",
+    this.groq = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
     this.model =
@@ -226,7 +225,7 @@ class GroqLLM {
       );
 
     const result = await LLMPerformanceMonitor.measureAsyncFunction(
-      this.openai.chat.completions
+      this.groq.chat.completions
         .create({
           model: this.model,
           messages,
@@ -264,7 +263,7 @@ class GroqLLM {
       );
 
     const measuredStreamRequest = await LLMPerformanceMonitor.measureStream(
-      this.openai.chat.completions.create({
+      this.groq.chat.completions.create({
         model: this.model,
         stream: true,
         messages,
