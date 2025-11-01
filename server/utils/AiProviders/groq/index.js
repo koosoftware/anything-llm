@@ -6,7 +6,7 @@ const {
   handleDefaultStreamResponseV2,
 } = require("../../helpers/chat/responses");
 const { MODEL_MAP } = require("../modelMap");
-import Groq from "groq-sdk";
+const Groq = require("groq-sdk");
 
 class GroqLLM {
   constructor(embedder = null, modelPreference = null) {
