@@ -98,12 +98,30 @@ class GroqLLM {
     userPrompt = "",
     attachments = [], // This is the specific attachment for only this prompt
   }) {
-    // Remove attachments from chatHistory, due to property 'attachments' is unsupported
-    /*chatHistory.forEach((msg) => {
-      if (msg.attachments) {
-        delete msg.attachments;
-      }
-    });*/
+    const VISION_MODELS = [
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "meta-llama/llama-4-maverick-17b-128e-instruct"
+    ];
+    if (!VISION_MODELS.includes(this.model)) {
+      // Remove attachments from chatHistory, due to property 'attachments' is unsupported
+      chatHistory.forEach((msg) => {
+        if (msg.attachments) {
+          delete msg.attachments;
+        }
+      });
+
+      return [
+        {
+          role: "system",
+          content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
+        },
+        ...chatHistory,
+        { 
+          role: "user", 
+          content: userPrompt 
+        },
+      ];
+    }
 
     const finalChatHistory = chatHistory.map((msg) => {
       const chatHistoryContentList = [
@@ -127,26 +145,19 @@ class GroqLLM {
       };
     });
 
-    const VISION_MODELS = [
-      "llama-3.2-90b-vision-preview",
-      "llama-3.2-11b-vision-preview",
-    ];
-    const DEFAULT_PROMPT_STRUCT = [
-      {
-        role: "system",
-        content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
-      },
-      ...finalChatHistory,
-      { role: "user", content: userPrompt },
-    ];
+    if (!attachments.length) {
+      // No attachment
+      return [
+        {
+          role: "system",
+          content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
+        },
+        ...finalChatHistory,
+        { role: "user", content: userPrompt },
+      ];
 
-    // If there are no attachments or model is not a vision model, return the default prompt structure
-    // as there is nothing to attach or do and no model limitations to consider
-    if (!attachments.length) return DEFAULT_PROMPT_STRUCT;
-    if (!VISION_MODELS.includes(this.model)) {
-      /*this.#log(
-        `${this.model} is not an explicitly supported vision model! Will omit attachments.`
-      );*/
+    } else {
+      // Has attachment
       return [
         {
           role: "system",
@@ -163,37 +174,14 @@ class GroqLLM {
             {
               type: "image_url",
               image_url: {
-                url: attachments[0].contentString,
+                url: attachments[0].contentString
               }
             }
           ] 
         },
       ];
-    }
 
-    return [
-      // Why is the system prompt and history commented out?
-      // The current vision models for Groq perform VERY poorly with ANY history or text prior to the image.
-      // In order to not get LLM refusals for every single message, we will not include the "system prompt" or even the chat history.
-      // This is a temporary solution until Groq fixes their vision models to be more coherent and also handle context prior to the image.
-      // Note for the future:
-      // Groq vision models also do not support system prompts - which is why you see the user/assistant emulation used instead of "system".
-      // This means any vision call is assessed independently of the chat context prior to the image.
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      // {
-      //   role: "user",
-      //   content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
-      // },
-      // {
-      //   role: "assistant",
-      //   content: "OK",
-      // },
-      // ...chatHistory,
-      {
-        role: "user",
-        content: this.#generateContent({ userPrompt, attachments }),
-      },
-    ];
+    }
   }
 
   /**
