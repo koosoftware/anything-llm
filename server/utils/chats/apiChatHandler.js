@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 const { DocumentManager } = require("../DocumentManager");
 const { WorkspaceChats } = require("../../models/workspaceChats");
+const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
 const { getVectorDbClass, resolveProviderConnector } = require("../helpers");
 const { writeResponseChunk } = require("../helpers/chat/responses");
 const {
@@ -560,7 +561,7 @@ async function streamChat({
         // These are needed for the download endpoint to authorize file access
         const allOutputs = [...outputs, ...agentHandler.getPendingOutputs()];
 
-        await WorkspaceChats.new({
+        const { chat } = await WorkspaceChats.new({
           workspaceId: workspace.id,
           prompt: String(message),
           response: {
@@ -585,6 +586,7 @@ async function streamChat({
           close: true,
           error: false,
           metrics,
+          chatId: chat?.id ?? null,
         });
       });
   }
@@ -692,6 +694,27 @@ async function streamChat({
       });
     }
   });
+
+  // Session-scoped parsed files uploaded via /v1/workspace/:slug/parse-file
+  // are injected as context here so an API session can "ask" a document
+  // without it being embedded into the workspace.
+  if (sessionId && String(sessionId).length > 0) {
+    const parsedFiles = await WorkspaceParsedFiles.getContextFiles(
+      workspace,
+      thread || null,
+      user || null,
+      sessionId
+    );
+    parsedFiles.forEach((doc) => {
+      const { pageContent, ...metadata } = doc;
+      contextTexts.push(doc.pageContent);
+      sources.push({
+        text:
+          pageContent.slice(0, 1_000) + "...continued on in source document...",
+        ...metadata,
+      });
+    });
+  }
 
   const vectorSearchResults =
     embeddingsCount !== 0

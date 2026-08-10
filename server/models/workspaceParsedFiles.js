@@ -14,6 +14,7 @@ const WorkspaceParsedFiles = {
     threadId = null,
     metadata = null,
     tokenCountEstimate = 0,
+    sessionId = null,
   }) {
     try {
       const file = await prisma.workspace_parsed_files.create({
@@ -24,6 +25,7 @@ const WorkspaceParsedFiles = {
           threadId: threadId ? parseInt(threadId) : null,
           metadata,
           tokenCountEstimate,
+          sessionId,
         },
       });
 
@@ -207,11 +209,17 @@ const WorkspaceParsedFiles = {
     }
   },
 
-  getContextFiles: async function (workspace, thread = null, user = null) {
+  getContextFiles: async function (
+    workspace,
+    thread = null,
+    user = null,
+    sessionId = null
+  ) {
     try {
       const files = await this.where({
         workspaceId: workspace.id,
         threadId: thread?.id || null,
+        sessionId: sessionId || null,
         ...(user ? { userId: user.id } : {}),
       });
 

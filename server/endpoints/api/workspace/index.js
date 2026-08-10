@@ -21,6 +21,11 @@ const { getModelTag } = require("../../utils");
 const {
   workspaceDeletionProtection,
 } = require("../../../utils/middleware/workspaceDeletionProtection");
+const { handleAPIFileUpload } = require("../../../utils/files/multer");
+const { CollectorApi } = require("../../../utils/collectorApi");
+const {
+  WorkspaceParsedFiles,
+} = require("../../../models/workspaceParsedFiles");
 
 function apiWorkspaceEndpoints(app) {
   if (!app) return;
@@ -1020,6 +1025,152 @@ function apiWorkspaceEndpoints(app) {
             score: source.score,
           })),
         });
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.delete(
+    "/v1/workspace/:slug/delete-chats",
+    [validApiKey],
+    async (request, response) => {
+      try {
+        const { slug = "" } = request.params;
+        const { chatIds = [] } = reqBody(request);
+        const workspace = await Workspace.get({ slug });
+
+        if (!workspace || !Array.isArray(chatIds)) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        // This works for both workspace and threads.
+        // We scope by workspace since they all live on the same table.
+        await WorkspaceChats.delete({
+          id: { in: chatIds.map((id) => Number(id)) },
+          workspaceId: workspace.id,
+        });
+
+        await EventLogs.logEvent("api_workspace_chat_deleted", {
+          workspaceName: workspace?.name || "Unknown Workspace",
+        });
+
+        response.sendStatus(200).end();
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.post(
+    "/v1/workspace/:slug/parse-file",
+    [validApiKey, handleAPIFileUpload],
+    async (request, response) => {
+      try {
+        const { originalname } = request.file;
+        const { slug = "" } = request.params;
+        const { sessionId } = reqBody(request);
+        const workspace = await Workspace.get({ slug });
+
+        if (!workspace || !sessionId || String(sessionId).length === 0) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        const Collector = new CollectorApi();
+        const processingOnline = await Collector.online();
+
+        if (!processingOnline) {
+          response
+            .status(500)
+            .json({
+              success: false,
+              error: `Document processing API is not online. Document ${originalname} will not be parsed.`,
+            })
+            .end();
+          return;
+        }
+
+        const { success, reason, documents } =
+          await Collector.parseDocument(originalname);
+        if (!success || !documents?.[0]) {
+          return response.status(500).json({
+            success: false,
+            error: reason || "No document returned from collector",
+          });
+        }
+
+        const files = await Promise.all(
+          documents.map(async (doc) => {
+            const metadata = { ...doc };
+            // Strip out pageContent - it is read back off disk on demand.
+            delete metadata.pageContent;
+            const filename = `${originalname}-${doc.id}.json`;
+            const { file, error: dbError } = await WorkspaceParsedFiles.create({
+              filename,
+              workspaceId: workspace.id,
+              userId: null,
+              threadId: null,
+              metadata: JSON.stringify(metadata),
+              tokenCountEstimate: doc.token_count_estimate || 0,
+              sessionId: String(sessionId),
+            });
+
+            if (dbError) throw new Error(dbError);
+            return file;
+          })
+        );
+
+        Collector.log(`Document ${originalname} parsed successfully.`);
+        await EventLogs.logEvent("document_uploaded_to_chat", {
+          documentName: originalname,
+          workspace: workspace.slug,
+        });
+
+        response.status(200).json({
+          success: true,
+          error: null,
+          files,
+        });
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.delete(
+    "/v1/workspace/:slug/delete-parsed-files",
+    [validApiKey],
+    async (request, response) => {
+      try {
+        const { slug = "" } = request.params;
+        const { fileIds = [] } = reqBody(request);
+        const workspace = await Workspace.get({ slug });
+
+        if (!workspace || !Array.isArray(fileIds)) {
+          response.sendStatus(400).end();
+          return;
+        }
+
+        const success = await WorkspaceParsedFiles.delete({
+          id: { in: fileIds.map((id) => parseInt(id)) },
+          workspaceId: workspace.id,
+        });
+
+        if (!success) {
+          response.sendStatus(500).end();
+          return;
+        }
+
+        await EventLogs.logEvent("api_workspace_parsed_files_deleted", {
+          workspaceName: workspace?.name || "Unknown Workspace",
+        });
+
+        response.sendStatus(200).end();
       } catch (e) {
         console.error(e.message, e);
         response.sendStatus(500).end();

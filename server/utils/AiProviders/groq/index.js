@@ -104,12 +104,21 @@ class GroqLLM {
       "llama-3.2-90b-vision-preview",
       "llama-3.2-11b-vision-preview",
     ];
+    // Groq's API rejects unknown properties on message objects.
+    // `convertToPromptHistory` tags historical user messages with an
+    // `attachments` property, and unlike every other provider Groq does not run
+    // its history through `formatChatHistory` - so we strip it here or the
+    // request 400s on any thread that ever had an attachment.
+    const sanitizedHistory = chatHistory.map(
+      ({ attachments: _attachments, ...message }) => message
+    );
+
     const DEFAULT_PROMPT_STRUCT = [
       {
         role: "system",
         content: `${systemPrompt}${this.#appendContext(contextTexts)}`,
       },
-      ...chatHistory,
+      ...sanitizedHistory,
       { role: "user", content: userPrompt },
     ];
 
@@ -221,6 +230,7 @@ class GroqLLM {
       func: this.openai.chat.completions.create({
         model: this.model,
         stream: true,
+        include_reasoning: false,
         messages,
         temperature,
       }),

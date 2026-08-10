@@ -376,6 +376,7 @@ model workspace_parsed_files {
   workspaceId        Int
   userId             Int?
   threadId           Int?
+  sessionId          String?
   metadata           String?
   tokenCountEstimate Int?               @default(0)
   createdAt          DateTime           @default(now())
