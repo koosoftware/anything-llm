@@ -12,6 +12,14 @@ const { NativeEmbeddingReranker } = require("../../EmbeddingRerankers/native");
  * @typedef {import('@lancedb/lancedb').Connection} LanceClient
  */
 
+/**
+ * Cached LanceDB connection. Opening a connection on every call is expensive and
+ * was done multiple times per chat (namespaceCount, hasNamespace, similarity search)
+ * so we hold a single connection for the process lifetime.
+ * @type {LanceClient|null}
+ */
+let cachedConnection = null;
+
 const LanceDb = {
   uri: `${
     !!process.env.STORAGE_DIR ? `${process.env.STORAGE_DIR}/` : "./storage/"
@@ -23,8 +31,8 @@ const LanceDb = {
     if (process.env.VECTOR_DB !== "lancedb")
       throw new Error("LanceDB::Invalid ENV settings");
 
-    const client = await lancedb.connect(this.uri);
-    return { client };
+    if (!cachedConnection) cachedConnection = await lancedb.connect(this.uri);
+    return { client: cachedConnection };
   },
   distanceToSimilarity: function (distance = null) {
     if (distance === null || typeof distance !== "number") return 0.0;
@@ -455,6 +463,8 @@ const LanceDb = {
   },
   reset: async function () {
     const { client } = await this.connect();
+    // Drop the cached connection since the underlying directory is being deleted.
+    cachedConnection = null;
     const fs = require("fs");
     fs.rm(`${client.uri}`, { recursive: true }, () => null);
     return { reset: true };
