@@ -409,13 +409,25 @@ class GeminiLLM {
   }
 
   async streamGetChatCompletion(messages = null, { temperature = 0.7 }) {
+    const options = {
+      model: this.model,
+      stream: true,
+      messages,
+      temperature: temperature,
+    };
+
+    if (this.model.startsWith("gemma")) {
+      options.extra_body = {
+        google: {
+          thinking_config: {
+            thinking_level: "minimal",
+          },
+        },
+      };
+    }
+
     const measuredStreamRequest = await LLMPerformanceMonitor.measureStream(
-      this.openai.chat.completions.create({
-        model: this.model,
-        stream: true,
-        messages,
-        temperature: temperature,
-      }),
+      this.openai.chat.completions.create(options),
       messages,
       true
     );
