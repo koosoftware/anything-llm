@@ -1,5 +1,10 @@
-sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.3 -f ./docker/Dockerfile .
-sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.3
+sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.4 -f ./docker/Dockerfile .
+sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.4
+
+
+v1.8.5.4 (28-Aug-2026)
+-----------------------
+- Fix bedrock mantle path for Gemma 4 31B
 
 
 v1.8.5.3 (28-Aug-2026)

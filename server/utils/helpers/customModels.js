@@ -732,9 +732,13 @@ async function getBedrockMantleModels(_apiKey = null, _region = null) {
       return { models: [], error: "No Bedrock Mantle API key was set." };
 
     const { OpenAI: OpenAIApi } = require("openai");
+    // Model listing lives on a different path prefix than inference does.
+    const {
+      modelsBaseURL,
+    } = require("../AiProviders/bedrockMantle/endpoints");
     const openai = new OpenAIApi({
       apiKey,
-      baseURL: `https://bedrock-mantle.${region}.api.aws/v1`,
+      baseURL: modelsBaseURL(region),
     });
 
     const models = await openai.models

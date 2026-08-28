@@ -3,6 +3,9 @@ const Provider = require("./ai-provider.js");
 const InheritMultiple = require("./helpers/classes.js");
 const UnTooled = require("./helpers/untooled.js");
 const { APIError } = require("../error.js");
+const {
+  openaiBaseURL,
+} = require("../../../AiProviders/bedrockMantle/endpoints.js");
 
 /**
  * The agent provider for AWS Bedrock via the Bedrock Mantle endpoint.
@@ -23,7 +26,7 @@ class AWSBedrockMantleProvider extends InheritMultiple([Provider, UnTooled]) {
       null;
     const region = process.env.AWS_BEDROCK_MANTLE_LLM_REGION;
     const client = new OpenAI({
-      baseURL: `https://bedrock-mantle.${region}.api.aws/v1`,
+      baseURL: openaiBaseURL(region),
       apiKey: process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY,
       maxRetries: 0,
     });
