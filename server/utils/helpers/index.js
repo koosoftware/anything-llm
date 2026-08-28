@@ -188,6 +188,9 @@ function getLLMProvider({ provider = null, model = null } = {}) {
     case "bedrock":
       const { AWSBedrockLLM } = require("../AiProviders/bedrock");
       return new AWSBedrockLLM(embedder, model);
+    case "bedrock_mantle":
+      const { AWSBedrockMantleLLM } = require("../AiProviders/bedrockMantle");
+      return new AWSBedrockMantleLLM(embedder, model);
     case "deepseek":
       const { DeepSeekLLM } = require("../AiProviders/deepseek");
       return new DeepSeekLLM(embedder, model);
@@ -338,6 +341,9 @@ function getLLMProviderClass({ provider = null } = {}) {
     case "bedrock":
       const { AWSBedrockLLM } = require("../AiProviders/bedrock");
       return AWSBedrockLLM;
+    case "bedrock_mantle":
+      const { AWSBedrockMantleLLM } = require("../AiProviders/bedrockMantle");
+      return AWSBedrockMantleLLM;
     case "deepseek":
       const { DeepSeekLLM } = require("../AiProviders/deepseek");
       return DeepSeekLLM;
@@ -414,6 +420,8 @@ function getBaseLLMProviderModel({ provider = null } = {}) {
       return process.env.GENERIC_OPEN_AI_MODEL_PREF;
     case "bedrock":
       return process.env.AWS_BEDROCK_LLM_MODEL_PREFERENCE;
+    case "bedrock_mantle":
+      return process.env.AWS_BEDROCK_MANTLE_LLM_MODEL_PREFERENCE;
     case "deepseek":
       return process.env.DEEPSEEK_MODEL_PREF;
     case "apipie":

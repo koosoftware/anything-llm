@@ -23,6 +23,7 @@ const ENABLED_PROVIDERS = [
   "textgenwebui",
   "generic-openai",
   "bedrock",
+  "bedrock_mantle",
   "fireworksai",
   "deepseek",
   "ppio",

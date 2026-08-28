@@ -56,6 +56,7 @@ import KoboldCPPOptions from "@/components/LLMSelection/KoboldCPPOptions";
 import TextGenWebUIOptions from "@/components/LLMSelection/TextGenWebUIOptions";
 import LiteLLMOptions from "@/components/LLMSelection/LiteLLMOptions";
 import AWSBedrockLLMOptions from "@/components/LLMSelection/AwsBedrockLLMOptions";
+import AWSBedrockMantleLLMOptions from "@/components/LLMSelection/AwsBedrockMantleLLMOptions";
 import DeepSeekOptions from "@/components/LLMSelection/DeepSeekOptions";
 import ApiPieLLMOptions from "@/components/LLMSelection/ApiPieOptions";
 import XAILLMOptions from "@/components/LLMSelection/XAiLLMOptions";
@@ -285,6 +286,19 @@ export const AVAILABLE_LLM_PROVIDERS = [
       "AwsBedrockLLMAccessKey",
       "AwsBedrockLLMRegion",
       "AwsBedrockLLMModel",
+    ],
+  },
+  {
+    name: "AWS Bedrock (Mantle)",
+    value: "bedrock_mantle",
+    logo: AWSBedrockLogo,
+    options: (settings) => <AWSBedrockMantleLLMOptions settings={settings} />,
+    description:
+      "Run AWS Bedrock models using the OpenAI-compatible Mantle API key.",
+    requiredConfig: [
+      "AwsBedrockMantleLLMApiKey",
+      "AwsBedrockMantleLLMRegion",
+      "AwsBedrockMantleLLMModel",
     ],
   },
   {

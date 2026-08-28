@@ -33,6 +33,7 @@ const SUPPORT_CUSTOM_MODELS = [
   "ppio",
   "dpais",
   "moonshotai",
+  "bedrock_mantle",
   // Embedding Engines
   "native-embedder",
 ];
@@ -66,6 +67,9 @@ async function getCustomModels(provider = "", apiKey = null, basePath = null) {
       return await getKoboldCPPModels(basePath);
     case "litellm":
       return await liteLLMModels(basePath, apiKey);
+    case "bedrock_mantle":
+      // `basePath` carries the AWS region for this provider.
+      return await getBedrockMantleModels(apiKey, basePath);
     case "elevenlabs-tts":
       return await getElevenLabsModels(apiKey);
     case "groq":
@@ -708,6 +712,56 @@ async function getMoonshotAiModels(_apiKey = null) {
   // Api Key was successful so lets save it for future uses
   if (models.length > 0) process.env.MOONSHOT_AI_API_KEY = apiKey;
   return { models, error: null };
+}
+
+/**
+ * Get AWS Bedrock models available through the Bedrock Mantle OpenAI-compatible endpoint.
+ * @param {string|null} _apiKey - Bedrock Mantle API key. Falls back to the env value.
+ * @param {string|null} _region - AWS region. Falls back to the env value.
+ * @returns {Promise<{models: object[], error: string|null}>}
+ */
+async function getBedrockMantleModels(_apiKey = null, _region = null) {
+  try {
+    const apiKey =
+      _apiKey === true
+        ? process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY
+        : _apiKey || process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY || null;
+    const region =
+      _region || process.env.AWS_BEDROCK_MANTLE_LLM_REGION || "us-west-2";
+    if (!apiKey)
+      return { models: [], error: "No Bedrock Mantle API key was set." };
+
+    const { OpenAI: OpenAIApi } = require("openai");
+    const openai = new OpenAIApi({
+      apiKey,
+      baseURL: `https://bedrock-mantle.${region}.api.aws/v1`,
+    });
+
+    const models = await openai.models
+      .list()
+      .then((results) =>
+        results.data.map((model) => ({
+          id: model.id,
+          name: model.id,
+          organization: model.owned_by ?? "AWS Bedrock",
+        }))
+      )
+      .catch((e) => {
+        console.error(`AWSBedrockMantle:listModels`, e.message);
+        return [];
+      });
+
+    // Api Key was successful so lets save it for future uses
+    if (models.length > 0 && !!apiKey)
+      process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY = apiKey;
+    return { models, error: null };
+  } catch (e) {
+    console.error(`AWSBedrockMantle:getBedrockMantleModels`, e.message);
+    return {
+      models: [],
+      error: "Could not fetch AWS Bedrock (Mantle) models",
+    };
+  }
 }
 
 module.exports = {

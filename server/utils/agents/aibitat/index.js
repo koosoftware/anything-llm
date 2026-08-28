@@ -808,6 +808,8 @@ ${this.getHistory({ to: route.to })
         return new Providers.TextWebGenUiProvider({});
       case "bedrock":
         return new Providers.AWSBedrockProvider({});
+      case "bedrock_mantle":
+        return new Providers.AWSBedrockMantleProvider({ model: config.model });
       case "fireworksai":
         return new Providers.FireworksAIProvider({ model: config.model });
       case "nvidia-nim":

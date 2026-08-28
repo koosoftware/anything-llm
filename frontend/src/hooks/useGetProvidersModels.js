@@ -31,6 +31,7 @@ const PROVIDER_DEFAULT_MODELS = {
   textgenwebui: [],
   "generic-openai": [],
   bedrock: [],
+  bedrock_mantle: [],
   xai: ["grok-beta"],
 };
 

@@ -115,6 +115,9 @@ function getModelTag() {
     case "bedrock":
       model = process.env.AWS_BEDROCK_LLM_MODEL_PREFERENCE;
       break;
+    case "bedrock_mantle":
+      model = process.env.AWS_BEDROCK_MANTLE_LLM_MODEL_PREFERENCE;
+      break;
     case "fireworksai":
       model = process.env.FIREWORKS_AI_LLM_MODEL_PREF;
       break;

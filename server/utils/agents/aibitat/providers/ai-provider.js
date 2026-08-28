@@ -131,6 +131,16 @@ class Provider {
           credentials: credentials,
           ...config,
         });
+      case "bedrock_mantle":
+        // Mantle is an OpenAI-compatible endpoint authenticated with a bearer key,
+        // so it does not use the AWS SDK/SigV4 path above.
+        return new ChatOpenAI({
+          configuration: {
+            baseURL: `https://bedrock-mantle.${process.env.AWS_BEDROCK_MANTLE_LLM_REGION}.api.aws/v1`,
+          },
+          apiKey: process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY ?? null,
+          ...config,
+        });
       case "fireworksai":
         return new ChatOpenAI({
           apiKey: process.env.FIREWORKS_AI_LLM_API_KEY,

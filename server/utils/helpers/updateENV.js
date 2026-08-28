@@ -262,6 +262,28 @@ const KEY_MAPPING = {
     checks: [nonZero],
   },
 
+  // AWS Bedrock (Mantle) LLM Settings
+  AwsBedrockMantleLLMApiKey: {
+    envKey: "AWS_BEDROCK_MANTLE_LLM_API_KEY",
+    checks: [isNotEmpty],
+  },
+  AwsBedrockMantleLLMRegion: {
+    envKey: "AWS_BEDROCK_MANTLE_LLM_REGION",
+    checks: [isNotEmpty],
+  },
+  AwsBedrockMantleLLMModel: {
+    envKey: "AWS_BEDROCK_MANTLE_LLM_MODEL_PREFERENCE",
+    checks: [isNotEmpty],
+  },
+  AwsBedrockMantleLLMTokenLimit: {
+    envKey: "AWS_BEDROCK_MANTLE_LLM_MODEL_TOKEN_LIMIT",
+    checks: [nonZero],
+  },
+  AwsBedrockMantleLLMMaxTokens: {
+    envKey: "AWS_BEDROCK_MANTLE_LLM_MAX_TOKENS",
+    checks: [nonZero],
+  },
+
   // Dell Pro AI Studio Settings
   DellProAiStudioBasePath: {
     envKey: "DPAIS_LLM_BASE_PATH",
@@ -806,6 +828,7 @@ function supportedLLM(input = "") {
     "litellm",
     "generic-openai",
     "bedrock",
+    "bedrock_mantle",
     "deepseek",
     "apipie",
     "xai",

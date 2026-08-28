@@ -147,6 +147,15 @@ class AgentHandler {
             "AWS Bedrock Access Keys and region must be provided to use agents."
           );
         break;
+      case "bedrock_mantle":
+        if (
+          !process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY ||
+          !process.env.AWS_BEDROCK_MANTLE_LLM_REGION
+        )
+          throw new Error(
+            "AWS Bedrock (Mantle) API key and region must be provided to use agents."
+          );
+        break;
       case "fireworksai":
         if (!process.env.FIREWORKS_AI_LLM_API_KEY)
           throw new Error(
@@ -252,6 +261,8 @@ class AgentHandler {
         return null;
       case "bedrock":
         return process.env.AWS_BEDROCK_LLM_MODEL_PREFERENCE ?? null;
+      case "bedrock_mantle":
+        return process.env.AWS_BEDROCK_MANTLE_LLM_MODEL_PREFERENCE ?? null;
       case "fireworksai":
         return process.env.FIREWORKS_AI_LLM_MODEL_PREF ?? null;
       case "deepseek":

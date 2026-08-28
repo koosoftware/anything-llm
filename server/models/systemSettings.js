@@ -580,6 +580,16 @@ const SystemSettings = {
       AwsBedrockLLMMaxOutputTokens:
         process.env.AWS_BEDROCK_LLM_MAX_OUTPUT_TOKENS || 4096,
 
+      // AWS Bedrock (Mantle) - separate provider from the legacy AWS SDK one above
+      AwsBedrockMantleLLMApiKey: !!process.env.AWS_BEDROCK_MANTLE_LLM_API_KEY,
+      AwsBedrockMantleLLMRegion: process.env.AWS_BEDROCK_MANTLE_LLM_REGION,
+      AwsBedrockMantleLLMModel:
+        process.env.AWS_BEDROCK_MANTLE_LLM_MODEL_PREFERENCE,
+      AwsBedrockMantleLLMTokenLimit:
+        process.env.AWS_BEDROCK_MANTLE_LLM_MODEL_TOKEN_LIMIT || 8192,
+      AwsBedrockMantleLLMMaxTokens:
+        process.env.AWS_BEDROCK_MANTLE_LLM_MAX_TOKENS || 4096,
+
       // Cohere API Keys
       CohereApiKey: !!process.env.COHERE_API_KEY,
       CohereModelPref: process.env.COHERE_MODEL_PREF,
