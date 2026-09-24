@@ -39,6 +39,10 @@ const KEY_MAPPING = {
     envKey: "EMBEDDING_MODEL_PREF",
     checks: [isNotEmpty],
   },
+  AzureOpenAiMaxTokens: {
+    envKey: "AZURE_OPENAI_MAX_TOKENS",
+    checks: [nonZeroOrEmpty],
+  },
   AzureOpenAiModelType: {
     envKey: "AZURE_OPENAI_MODEL_TYPE",
     checks: [
@@ -70,6 +74,10 @@ const KEY_MAPPING = {
   GeminiSafetySetting: {
     envKey: "GEMINI_SAFETY_SETTING",
     checks: [validGeminiSafetySetting],
+  },
+  GeminiLLMMaxTokens: {
+    envKey: "GEMINI_LLM_MAX_TOKENS",
+    checks: [nonZeroOrEmpty],
   },
 
   // LMStudio Settings
@@ -735,6 +743,13 @@ function isNotEmpty(input = "") {
 function nonZero(input = "") {
   if (isNaN(Number(input))) return "Value must be a number";
   return Number(input) <= 0 ? "Value must be greater than zero" : null;
+}
+
+// Same as nonZero, but an empty value is allowed (means "not set").
+function nonZeroOrEmpty(input = "") {
+  if (input === null || input === undefined || String(input).trim() === "")
+    return null;
+  return nonZero(input);
 }
 
 function isInteger(input = "") {

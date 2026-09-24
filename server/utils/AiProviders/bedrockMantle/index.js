@@ -210,6 +210,7 @@ class AWSBedrockMantleLLM {
           model: this.model,
           messages,
           temperature: this.temperatureParam(temperature),
+          max_tokens: this.#maxTokens,
         })
         .catch((e) => {
           this.#log(
@@ -257,6 +258,7 @@ class AWSBedrockMantleLLM {
       model: this.model,
       messages,
       temperature: this.temperatureParam(temperature),
+      max_tokens: this.#maxTokens,
       stream: true,
     });
     return await LLMPerformanceMonitor.measureStream(stream, messages, true);

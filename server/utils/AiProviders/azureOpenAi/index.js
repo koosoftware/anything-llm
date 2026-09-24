@@ -129,6 +129,20 @@ class AzureOpenAiLLM {
     ];
   }
 
+  /**
+   * Max output tokens per response, from AZURE_OPENAI_MAX_TOKENS.
+   * Reasoning (o-series) deployments require `max_completion_tokens`
+   * instead of `max_tokens`. Returns {} when unset so no limit is sent.
+   */
+  #maxTokensParam() {
+    const value = Number(process.env.AZURE_OPENAI_MAX_TOKENS);
+    if (!Number.isFinite(value) || value <= 0) return {};
+    const maxTokens = Math.floor(value);
+    return this.isOTypeModel
+      ? { max_completion_tokens: maxTokens }
+      : { max_tokens: maxTokens };
+  }
+
   async getChatCompletion(messages = [], { temperature = 0.7 }) {
     if (!this.model)
       throw new Error(
@@ -140,6 +154,7 @@ class AzureOpenAiLLM {
         messages,
         model: this.model,
         ...(this.isOTypeModel ? {} : { temperature }),
+        ...this.#maxTokensParam(),
       })
     );
 
@@ -172,6 +187,7 @@ class AzureOpenAiLLM {
         messages,
         model: this.model,
         ...(this.isOTypeModel ? {} : { temperature }),
+        ...this.#maxTokensParam(),
         n: 1,
         stream: true,
       }),

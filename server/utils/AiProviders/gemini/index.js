@@ -376,6 +376,15 @@ class GeminiLLM {
     ];
   }
 
+  /**
+   * Max output tokens per response, from GEMINI_LLM_MAX_TOKENS.
+   * Returns null when unset/invalid so no limit is sent (model default applies).
+   */
+  get #maxTokens() {
+    const value = Number(process.env.GEMINI_LLM_MAX_TOKENS);
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : null;
+  }
+
   async getChatCompletion(messages = null, { temperature = 0.7 }) {
     const result = await LLMPerformanceMonitor.measureAsyncFunction(
       this.openai.chat.completions
@@ -383,6 +392,7 @@ class GeminiLLM {
           model: this.model,
           messages,
           temperature: temperature,
+          ...(this.#maxTokens ? { max_tokens: this.#maxTokens } : {}),
         })
         .catch((e) => {
           console.error(e);
@@ -414,6 +424,7 @@ class GeminiLLM {
       stream: true,
       messages,
       temperature: temperature,
+      ...(this.#maxTokens ? { max_tokens: this.#maxTokens } : {}),
     };
 
     if (this.model.startsWith("gemma")) {

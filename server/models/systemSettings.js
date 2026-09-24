@@ -473,6 +473,7 @@ const SystemSettings = {
       AzureOpenAiEmbeddingModelPref: process.env.EMBEDDING_MODEL_PREF,
       AzureOpenAiTokenLimit: process.env.AZURE_OPENAI_TOKEN_LIMIT || 4096,
       AzureOpenAiModelType: process.env.AZURE_OPENAI_MODEL_TYPE || "default",
+      AzureOpenAiMaxTokens: process.env.AZURE_OPENAI_MAX_TOKENS,
 
       // Anthropic Keys
       AnthropicApiKey: !!process.env.ANTHROPIC_API_KEY,
@@ -484,6 +485,7 @@ const SystemSettings = {
         process.env.GEMINI_LLM_MODEL_PREF || "gemini-2.0-flash-lite",
       GeminiSafetySetting:
         process.env.GEMINI_SAFETY_SETTING || "BLOCK_MEDIUM_AND_ABOVE",
+      GeminiLLMMaxTokens: process.env.GEMINI_LLM_MAX_TOKENS,
 
       // LMStudio Keys
       LMStudioBasePath: process.env.LMSTUDIO_BASE_PATH,

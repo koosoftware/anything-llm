@@ -96,6 +96,27 @@ export default function AzureAiOptions({ settings }) {
             </option>
           </select>
         </div>
+
+        <div className="flex flex-col w-60">
+          <label className="text-white text-sm font-semibold block mb-3">
+            Max Tokens
+          </label>
+          <input
+            type="number"
+            name="AzureOpenAiMaxTokens"
+            className="border-none bg-theme-settings-input-bg text-white placeholder:text-theme-settings-input-placeholder text-sm rounded-lg focus:outline-primary-button active:outline-primary-button outline-none block w-full p-2.5"
+            placeholder="No limit (model default)"
+            min={1}
+            onScroll={(e) => e.target.blur()}
+            defaultValue={settings?.AzureOpenAiMaxTokens}
+            required={false}
+            autoComplete="off"
+          />
+          <p className="text-white/60 text-xs mt-2">
+            Max tokens the model can generate per response. Leave empty for no
+            limit.
+          </p>
+        </div>
       </div>
     </div>
   );
