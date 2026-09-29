@@ -123,34 +123,47 @@ async function getPageContent({ link, captureAs = "text", headers = {} }) {
       },
     });
 
-    // Override scrape method if headers are available
+    // Override scrape method: block image/media/font requests (not needed for
+    // text extraction) and set custom headers if available
     let overrideHeaders = validatedHeaders(headers);
-    if (Object.keys(overrideHeaders).length > 0) {
-      loader.scrape = async function () {
-        const { launch } = await PuppeteerWebBaseLoader.imports();
-        const browser = await launch({
-          headless: "new",
-          defaultViewport: null,
-          ignoreDefaultArgs: ["--disable-extensions"],
-          ...this.options?.launchOptions,
-        });
-        const page = await browser.newPage();
+    loader.scrape = async function () {
+      const { launch } = await PuppeteerWebBaseLoader.imports();
+      const browser = await launch({
+        headless: "new",
+        defaultViewport: null,
+        ignoreDefaultArgs: ["--disable-extensions"],
+        ...this.options?.launchOptions,
+      });
+      const page = await browser.newPage();
+      if (Object.keys(overrideHeaders).length > 0) {
         await page.setExtraHTTPHeaders(overrideHeaders);
+      }
 
-        await page.goto(this.webPath, {
-          timeout: 180000,
-          waitUntil: "networkidle2",
-          ...this.options?.gotoOptions,
-        });
+      await page.setRequestInterception(true);
+      page.on("request", (req) => {
+        const url = req.url().split("?")[0];
+        if (
+          ["image", "media", "font"].includes(req.resourceType()) ||
+          /\.(webp|png|jpe?g|gif|avif|bmp|ico|svg|mp4|webm|mov|m4v|m3u8|mp3|wav|ogg|woff2?|ttf|otf)$/i.test(url)
+        ) {
+          return req.abort().catch(() => {});
+        }
+        return req.continue().catch(() => {});
+      });
 
-        const bodyHTML = this.options?.evaluate
-          ? await this.options.evaluate(page, browser)
-          : await page.evaluate(() => document.body.innerHTML);
+      await page.goto(this.webPath, {
+        timeout: 180000,
+        waitUntil: "networkidle2",
+        ...this.options?.gotoOptions,
+      });
 
-        await browser.close();
-        return bodyHTML;
-      };
-    }
+      const bodyHTML = this.options?.evaluate
+        ? await this.options.evaluate(page, browser)
+        : await page.evaluate(() => document.body.innerHTML);
+
+      await browser.close();
+      return bodyHTML;
+    };
 
     const docs = await loader.load();
     for (const doc of docs) pageContents.push(doc.pageContent);
