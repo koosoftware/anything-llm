@@ -1,5 +1,9 @@
-sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.9 -f ./docker/Dockerfile .
-sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.9
+sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.10 -f ./docker/Dockerfile .
+sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.10
+
+v1.8.5.10 (15-Oct-2026)
+------------------------
+- Fix scrapping https://www.qncor.ca/investors?d8751c07_page=1 will freeze the server
 
 v1.8.5.9 (29-Sep-2026)
 -----------------------

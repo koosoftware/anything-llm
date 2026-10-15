@@ -134,35 +134,42 @@ async function getPageContent({ link, captureAs = "text", headers = {} }) {
         ignoreDefaultArgs: ["--disable-extensions"],
         ...this.options?.launchOptions,
       });
-      const page = await browser.newPage();
-      if (Object.keys(overrideHeaders).length > 0) {
-        await page.setExtraHTTPHeaders(overrideHeaders);
-      }
-
-      await page.setRequestInterception(true);
-      page.on("request", (req) => {
-        const url = req.url().split("?")[0];
-        if (
-          ["image", "media", "font"].includes(req.resourceType()) ||
-          /\.(webp|png|jpe?g|gif|avif|bmp|ico|svg|mp4|webm|mov|m4v|m3u8|mp3|wav|ogg|woff2?|ttf|otf)$/i.test(url)
-        ) {
-          return req.abort().catch(() => {});
+      try {
+        const page = await browser.newPage();
+        if (Object.keys(overrideHeaders).length > 0) {
+          await page.setExtraHTTPHeaders(overrideHeaders);
         }
-        return req.continue().catch(() => {});
-      });
 
-      await page.goto(this.webPath, {
-        timeout: 180000,
-        waitUntil: "networkidle2",
-        ...this.options?.gotoOptions,
-      });
+        await page.setRequestInterception(true);
+        page.on("request", (req) => {
+          const url = req.url().split("?")[0];
+          if (
+            // Iframes (embedded PDFs, chart/ticker widgets, video players...)
+            // - their content is not part of document.body.innerText anyway
+            (req.isNavigationRequest() && req.frame() !== page.mainFrame()) ||
+            ["image", "media", "font"].includes(req.resourceType()) ||
+            /\.(webp|png|jpe?g|gif|avif|bmp|ico|svg|mp4|webm|mov|m4v|m3u8|mp3|wav|ogg|woff2?|ttf|otf)$/i.test(url)
+          ) {
+            return req.abort().catch(() => {});
+          }
+          return req.continue().catch(() => {});
+        });
 
-      const bodyHTML = this.options?.evaluate
-        ? await this.options.evaluate(page, browser)
-        : await page.evaluate(() => document.body.innerHTML);
+        await page.goto(this.webPath, {
+          timeout: 180000,
+          waitUntil: "networkidle2",
+          ...this.options?.gotoOptions,
+        });
 
-      await browser.close();
-      return bodyHTML;
+        const bodyHTML = this.options?.evaluate
+          ? await this.options.evaluate(page, browser)
+          : await page.evaluate(() => document.body.innerHTML);
+
+        return bodyHTML;
+      } finally {
+        // Always kill Chrome, even if goto/evaluate throws (e.g. navigation timeout)
+        if (browser.isConnected()) await browser.close().catch(() => {});
+      }
     };
 
     const docs = await loader.load();
