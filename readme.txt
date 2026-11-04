@@ -1,5 +1,9 @@
-sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.10 -f ./docker/Dockerfile .
-sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.10
+sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.11 -f ./docker/Dockerfile .
+sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.11
+
+v1.8.5.11 (04-Nov-2026)
+------------------------
+- Fix scrapping https://www.dalecityauto.com/ got the server OOM killed: fetch fallback now converts HTML to markdown (htmlToMarkdown) instead of returning raw HTML
 
 v1.8.5.10 (15-Oct-2026)
 ------------------------

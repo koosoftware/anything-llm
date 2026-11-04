@@ -5,6 +5,7 @@ const {
 const { writeToServerDocuments } = require("../../utils/files");
 const { tokenizeString } = require("../../utils/tokenizer");
 const { default: slugify } = require("slugify");
+const { htmlToMarkdown } = require("../helpers/htmlToMarkdown");
 
 /**
  * Scrape a generic URL and return the content in the specified format
@@ -192,7 +193,11 @@ async function getPageContent({ link, captureAs = "text", headers = {} }) {
         ...validatedHeaders(headers),
       },
     }).then((res) => res.text());
-    return pageText;
+    // Never return raw HTML as text: strip scripts/styles/page chrome and convert to
+    // markdown (falls back to plain text). Raw HTML from a failed Chrome launch produced
+    // 1369 chunks and got the server OOM killed.
+    if (captureAs === "html") return pageText;
+    return htmlToMarkdown(pageText, link);
   } catch (error) {
     console.error("getPageContent failed to be fetched by any method.", error);
   }
