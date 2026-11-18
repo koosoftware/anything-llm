@@ -1,5 +1,9 @@
-sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.11 -f ./docker/Dockerfile .
-sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.11
+sudo docker buildx build --platform linux/amd64 -t koosoftware/anything-llm:ragmyai-v1.8.5.12 -f ./docker/Dockerfile .
+sudo docker push koosoftware/anything-llm:ragmyai-v1.8.5.12
+
+v1.8.5.12 (18-Nov-2026)
+------------------------
+- Let AI knows the filename when ask doc
 
 v1.8.5.11 (04-Nov-2026)
 ------------------------
